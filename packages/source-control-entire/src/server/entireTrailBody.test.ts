@@ -222,6 +222,32 @@ describe("trailBodyMarkdown", () => {
     expect(unrenderedContent({ text_snapshot: "Plain" })).toBeNull();
   });
 
+  it.each(["inline", "fenced", "later paragraph"])(
+    "preserves literal self-link markers in %s content",
+    (kind) => {
+      const literal = "<!-- entire-trail-link-start --> example <!-- entire-trail-link-end -->";
+      const markdown =
+        kind === "inline"
+          ? `\`${literal}\``
+          : kind === "fenced"
+            ? `\`\`\`\n${literal}\n\`\`\``
+            : `Example\n\n${literal}`;
+      const content =
+        kind === "inline"
+          ? [paragraph(text(literal, [{ type: "code" }]))]
+          : kind === "fenced"
+            ? [{ type: "codeBlock", content: [text(literal)] }]
+            : [paragraph(text("Example")), paragraph(text(literal))];
+      for (const document of [
+        { text_snapshot: markdown },
+        { text_snapshot: "", content_json: { type: "doc", content } },
+      ]) {
+        expect(trailBodyMarkdown(document)).toBe(markdown);
+        expect(unrenderedContent(document)).toBeNull();
+      }
+    },
+  );
+
   it("falls back to the snapshot without the trail self-link", () => {
     expect(
       trailBodyMarkdown({

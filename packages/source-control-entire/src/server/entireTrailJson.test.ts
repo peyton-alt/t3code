@@ -174,6 +174,32 @@ describe("entireTrailJson", () => {
       ),
       [],
     );
+    for (const status of ["failed", "error", "pending", "passed"]) {
+      const gated = decodeDetail({
+        ...Fixtures.detail,
+        mergeability: {
+          ...Fixtures.detail.mergeability,
+          gates: [{ gate_type: "checks", gate_key: "checks", status, blocking: true }],
+          checks: {
+            ...Fixtures.detail.mergeability.checks,
+            runs: [Fixtures.detail.mergeability.checks.runs[0]],
+          },
+        },
+      });
+      const expected =
+        status === "failed" || status === "error"
+          ? "failing"
+          : status === "passed"
+            ? "passing"
+            : "pending";
+      const gatedChecks = Json.toChecks(gated, "gh/acme/web");
+      assert.strictEqual(Json.toChecksState(gatedChecks), expected);
+      assert.strictEqual(Json.toSummaryChecksState(gated, "gh/acme/web"), expected);
+      assert.strictEqual(
+        gatedChecks.some((check) => check.name === "Entire: checks"),
+        status !== "passed",
+      );
+    }
     assert.strictEqual(Json.headSha(detail), Fixtures.HEAD_SHA);
     const permissions = Json.toViewerPermissions(detail, "gh/acme/web");
     assert.deepStrictEqual(permissions.actions, ["draft", "close", "merge"]);
@@ -270,6 +296,7 @@ describe("entireTrailJson", () => {
         checks.map((check) => [check.name, check.status, check.description]),
         [
           ["Entire: findings", "failure", "Unresolved findings: 1 without a severity"],
+          ["Entire: checks", "failure", "lint is failing"],
           ["build", "success", "Buildkite"],
           ["lint", "pending", null],
           ["Entire: up_to_date", "success", null],

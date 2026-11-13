@@ -16,7 +16,7 @@ interface ProseMirrorNode {
 
 /** Entire's self-link at the top of a trail body is noise inside the trail itself. */
 const TRAIL_LINK =
-  /<!--\s*entire-trail-link-start\s*-->[\s\S]*?<!--\s*entire-trail-link-end\s*-->/gu;
+  /^\s*<!--\s*entire-trail-link-start\s*-->[\s\S]*?<!--\s*entire-trail-link-end\s*-->/u;
 
 const isNode = (value: unknown): value is ProseMirrorNode =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -43,7 +43,11 @@ const longestBacktickRun = (text: string) =>
  * stays as typed, as does `_` inside a word; a partner in a neighbouring node is not looked for.
  */
 function escapeText(text: string): string {
-  const paired = (char: string) => text.split(char).length > 2;
+  const counts = new Map<string, number>();
+  for (const char of text.match(/[`*~_]/gu) ?? []) {
+    counts.set(char, (counts.get(char) ?? 0) + 1);
+  }
+  const paired = (char: string) => (counts.get(char) ?? 0) > 1;
   return text
     .replace(/\\(?=[!-/:-@[-`{-~])/gu, "\\\\")
     .replace(/[`*~]/gu, (char) => (paired(char) ? `\\${char}` : char))

@@ -426,7 +426,8 @@ function gateChecks(
   return blockingGates(detail)
     .filter(
       (gate) =>
-        gate.gate_type !== "approvals" && (gate.gate_type !== "checks" || !runsRead(detail)),
+        gate.gate_type !== "approvals" &&
+        (gate.gate_type !== "checks" || !runsRead(detail) || gate.status !== "passed"),
     )
     .map((gate) => ({
       name: `Entire: ${gate.gate_key}`,

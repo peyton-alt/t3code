@@ -104,7 +104,7 @@ export const blocked = {
     gates: [
       gate("approvals", "failed", "Needs 1 approval"),
       gate("findings", "failed", "Unresolved findings: 1 without a severity"),
-      // CI is reported as its own runs; the gate that rolls them up is not shown again.
+      // CI runs replace a passing checks gate; a non-passing blocking gate is still reported.
       gate("checks", "failed", "lint is failing"),
       gate("up_to_date", "passed"),
       gate("base_checks", "pending"),
